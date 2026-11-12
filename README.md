@@ -17,7 +17,7 @@ O **SnapBrush** é um utilitário leve de captura e edição de tela em tempo re
 
 ## Interface em Ação
 
-Ao pressionar `PrintScreen`, a tela congela instantaneamente permitindo selecionar e ajustar a área exata do recorte, visualizar as dimensões em pixels (`Largura x Altura`) e utilizar a barra flutuante de anotações:
+Ao pressionar `PrintScreen`, ou clicar sobre o icone do `SnapBrush`, que fica na barra de tarefas do Windows, a tela congela instantaneamente permitindo selecionar e ajustar a área exata do recorte, visualizar as dimensões em pixels (`Largura x Altura`) e utilizar a barra flutuante de anotações:
 
 <div align="center">
   <img src="Captura01.png" alt="Demonstração do SnapBrush em uso no Windows" width="780" />
