@@ -1,0 +1,13 @@
+# Dependências e pacotes locais
+node_modules/
+
+dist/
+
+config.json
+icon_256.png
+package-lock.json
+
+# Logs e arquivos temporários do sistema
+npm-debug.log*
+Thumbs.db
+.DS_Store

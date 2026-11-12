@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Opções - SnapBrush</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 13px; }
+    body { background: #f0f0f0; color: #1e1e1e; padding: 12px; display: flex; flex-direction: column; height: 100vh; }
+
+    .tabs { display: flex; border-bottom: 1px solid #ccc; padding-left: 4px; }
+    .tab {
+      padding: 6px 14px;
+      background: #e4e4e4;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      margin-right: 3px;
+      cursor: pointer;
+      border-radius: 3px 3px 0 0;
+    }
+    .tab.active {
+      background: #fff;
+      font-weight: 600;
+      position: relative;
+      top: 1px;
+      border-bottom: 1px solid #fff;
+    }
+
+    .tab-content {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-top: none;
+      flex: 1;
+      padding: 18px 16px;
+      display: none;
+    }
+    .tab-content.active { display: block; }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .hotkey-input {
+      width: 190px;
+      padding: 5px 8px;
+      border: 1px solid #888;
+      border-radius: 2px;
+      background: #fff;
+      color: #111;
+      outline: none;
+      cursor: pointer;
+    }
+    .hotkey-input:focus { border-color: #0078d4; background: #f4f9ff; }
+    .hotkey-input:disabled { background: #ececec; color: #888; border-color: #ccc; cursor: not-allowed; }
+
+    .hint { color: #666; font-size: 12px; margin-top: 8px; }
+
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      min-width: 82px;
+      padding: 5px 14px;
+      border: 1px solid #adadad;
+      background: #e1e1e1;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .btn:hover { background: #e5f1fb; border-color: #0078d7; }
+    .btn.primary { border-color: #0078d7; }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <div class="tab active" data-tab="geral">Geral</div>
+    <div class="tab" data-tab="atalhos">Teclas de atalho</div>
+  </div>
+
+  <!-- Aba Geral -->
+  <div id="geral" class="tab-content active">
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="autoStart" />
+        Iniciar o SnapBrush automaticamente com o sistema (Windows)
+      </label>
+    </div>
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="notifyCopy" />
+        Mostrar notificação ao copiar captura para a área de transferência
+      </label>
+    </div>
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="notifySave" />
+        Mostrar notificação ao salvar captura em arquivo
+      </label>
+    </div>
+  </div>
+
+  <!-- Aba Teclas de Atalho -->
+  <div id="atalhos" class="tab-content">
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="enableGeneralHotkey" />
+        Atalho geral
+      </label>
+      <input type="text" id="generalHotkey" class="hotkey-input" readonly />
+    </div>
+
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="enableInstantSave" />
+        Salvar captura em tela cheia instantaneamente
+      </label>
+      <input type="text" id="instantSaveHotkey" class="hotkey-input" readonly />
+    </div>
+
+    <div class="row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="enableInstantCopy" />
+        Copiar captura de tela inteira instantaneamente
+      </label>
+      <input type="text" id="instantCopyHotkey" class="hotkey-input" readonly />
+    </div>
+
+    <p class="hint">Dica: Clique no campo de atalho e pressione a tecla desejada (ex: PrintScreen).</p>
+  </div>
+
+  <div class="footer">
+    <button class="btn primary" id="okBtn">OK</button>
+    <button class="btn" id="cancelBtn">Cancelar</button>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    const fields = {
+      autoStart: document.getElementById('autoStart'),
+      notifyCopy: document.getElementById('notifyCopy'),
+      notifySave: document.getElementById('notifySave'),
+      enableGeneralHotkey: document.getElementById('enableGeneralHotkey'),
+      generalHotkey: document.getElementById('generalHotkey'),
+      enableInstantSave: document.getElementById('enableInstantSave'),
+      instantSaveHotkey: document.getElementById('instantSaveHotkey'),
+      enableInstantCopy: document.getElementById('enableInstantCopy'),
+      instantCopyHotkey: document.getElementById('instantCopyHotkey')
+    };
+
+    function syncDisabledState() {
+      fields.generalHotkey.disabled = !fields.enableGeneralHotkey.checked;
+      fields.instantSaveHotkey.disabled = !fields.enableInstantSave.checked;
+      fields.instantCopyHotkey.disabled = !fields.enableInstantCopy.checked;
+    }
+
+    fields.enableGeneralHotkey.addEventListener('change', syncDisabledState);
+    fields.enableInstantSave.addEventListener('change', syncDisabledState);
+    fields.enableInstantCopy.addEventListener('change', syncDisabledState);
+
+    ipcRenderer.on('load-settings', (event, cfg) => {
+      fields.autoStart.checked = Boolean(cfg.autoStart);
+      fields.notifyCopy.checked = cfg.notifyCopy;
+      fields.notifySave.checked = cfg.notifySave;
+      fields.enableGeneralHotkey.checked = cfg.enableGeneralHotkey;
+      fields.generalHotkey.value = cfg.generalHotkey;
+      fields.enableInstantSave.checked = cfg.enableInstantSave;
+      fields.instantSaveHotkey.value = cfg.instantSaveHotkey;
+      fields.enableInstantCopy.checked = cfg.enableInstantCopy;
+      fields.instantCopyHotkey.value = cfg.instantCopyHotkey;
+      syncDisabledState();
+    });
+
+    document.querySelectorAll('.hotkey-input').forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        e.preventDefault();
+        if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+
+        const mods = [];
+        if (e.ctrlKey) mods.push('CommandOrControl');
+        if (e.altKey) mods.push('Alt');
+        if (e.shiftKey) mods.push('Shift');
+
+        let keyName = e.key;
+        if (keyName === ' ') keyName = 'Space';
+        else if (keyName.length === 1) keyName = keyName.toUpperCase();
+
+        input.value = [...mods, keyName].join('+');
+      });
+
+      input.addEventListener('keyup', (e) => {
+        if (e.key === 'PrintScreen') {
+          e.preventDefault();
+          const mods = [];
+          if (e.ctrlKey) mods.push('CommandOrControl');
+          if (e.altKey) mods.push('Alt');
+          if (e.shiftKey) mods.push('Shift');
+          input.value = [...mods, 'PrintScreen'].join('+');
+        }
+      });
+    });
+
+    document.getElementById('okBtn').addEventListener('click', () => {
+      ipcRenderer.send('save-settings', {
+        autoStart: fields.autoStart.checked,
+        notifyCopy: fields.notifyCopy.checked,
+        notifySave: fields.notifySave.checked,
+        enableGeneralHotkey: fields.enableGeneralHotkey.checked,
+        generalHotkey: fields.generalHotkey.value || 'PrintScreen',
+        enableInstantSave: fields.enableInstantSave.checked,
+        instantSaveHotkey: fields.instantSaveHotkey.value || 'Shift+PrintScreen',
+        enableInstantCopy: fields.enableInstantCopy.checked,
+        instantCopyHotkey: fields.instantCopyHotkey.value || 'CommandOrControl+PrintScreen'
+      });
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      window.close();
+    });
+  </script>
+</body>
+</html>

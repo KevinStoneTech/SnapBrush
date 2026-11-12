@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Sobre</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; background: #fff; color: #111; overflow: hidden; }
+
+    .top-area {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 28px;
+      background: #ffffff;
+    }
+
+    .title-box h1 {
+      font-size: 36px;
+      font-weight: 400;
+      color: #000;
+      margin-bottom: 6px;
+    }
+
+    .title-box .version {
+      font-size: 14px;
+      color: #222;
+    }
+
+    .logo-img {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.18));
+    }
+
+    .bottom-area {
+      background: #f0f0f0;
+      border-top: 1px solid #dfdfdf;
+      padding: 14px 20px;
+      font-size: 13px;
+      color: #111;
+      position: relative;
+    }
+
+    .bottom-area p { margin-bottom: 8px; }
+    .bottom-area a {
+      color: #0033cc;
+      text-decoration: underline;
+      display: inline-block;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+
+    .ok-btn {
+      position: absolute;
+      right: 18px;
+      bottom: 14px;
+      min-width: 80px;
+      padding: 4px 16px;
+      background: #e1e1e1;
+      border: 2px solid #0078d7;
+      border-radius: 2px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .ok-btn:hover { background: #e5f1fb; }
+  </style>
+</head>
+<body>
+  <div class="top-area">
+    <div class="title-box">
+      <h1>SnapBrush</h1>
+      <div class="version">1.0.0 (Open Source)</div>
+    </div>
+    <img src="icone_64x64.png" alt="SnapBrush Logo" class="logo-img" />
+  </div>
+
+  <div class="bottom-area">
+    <p>© 2026 Comunidade SnapBrush. Distribuído sob Licença MIT.</p>
+    <a id="termsLink">Termos de código aberto do SnapBrush</a><br/>
+    <a id="repoLink">https://github.com/KevinStoneTech/snapbrush</a>
+    <button class="ok-btn" id="okBtn">OK</button>
+  </div>
+
+  <script>
+    const { shell } = require('electron');
+    document.getElementById('okBtn').addEventListener('click', () => window.close());
+    document.getElementById('repoLink').addEventListener('click', () => {
+      shell.openExternal('https://github.com/KevinStoneTech/snapbrush');
+    });
+    document.getElementById('termsLink').addEventListener('click', () => {
+      shell.openExternal('https://opensource.org/licenses/MIT');
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Enter') window.close();
+    });
+  </script>
+</body>
+</html>

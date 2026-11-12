@@ -1,0 +1,66 @@
+{
+  "name": "snapbrush",
+  "productName": "SnapBrush",
+  "version": "1.0.0",
+  "description": "Ferramenta open-source de captura e anotação de tela",
+  "main": "main.js",
+  "author": "Kevin Stone",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "make-icon": "electron . --make-icon",
+    "dist": "npm run make-icon && electron-builder --win --x64"
+  },
+  "allowScripts": {
+    "electron": true,
+    "electron-winstaller": true
+  },
+  "overrides": {
+    "js-yaml": "^4.3.2"
+  },
+  "build": {
+    "appId": "com.snapbrush.app",
+    "productName": "SnapBrush",
+    "copyright": "Copyright © 2026 Comunidade SnapBrush",
+    "asar": true,
+    "compression": "maximum",
+    "electronLanguages": [
+      "pt-BR",
+      "en-US"
+    ],
+    "afterPack": "./afterPack.js",
+    "files": [
+      "main.js",
+      "index.html",
+      "editor.js",
+      "options.html",
+      "about.html",
+      "icone_64x64.png",
+      "icon_256.png"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon_256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SnapBrush",
+      "runAfterFinish": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.3.0",
+    "electron-builder": "^26.18.0"
+  }
+}

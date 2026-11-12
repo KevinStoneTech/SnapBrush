@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>SnapBrush Overlay</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+    body, html { width: 100vw; height: 100vh; overflow: hidden; font-family: 'Segoe UI', sans-serif; cursor: crosshair; }
+    canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; }
+
+    .toolbar {
+      position: absolute;
+      display: none;
+      background: rgba(24, 24, 30, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      padding: 4px 6px;
+      gap: 4px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+      z-index: 20;
+      align-items: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: #dcdce6;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .icon-btn.active { background: #0078d4; color: #fff; border-color: #3aa0f3; }
+    .icon-btn.danger:hover { background: #e81123; color: #fff; }
+
+    select.compact-select {
+      background: #262630;
+      color: #e0e0e8;
+      border: 1px solid #3e3e4c;
+      border-radius: 6px;
+      height: 30px;
+      padding: 0 4px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+    select.compact-select:hover { border-color: #606075; }
+    select.compact-select.active { border-color: #3aa0f3; background: #163654; color: #fff; }
+
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 0 3px;
+    }
+
+    .size-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #23232c;
+      padding: 0 8px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid #383846;
+    }
+
+    .size-preview-box {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #sizeCircle {
+      border-radius: 50%;
+      background: #ff2e2e;
+      transition: width 0.08s, height 0.08s, background 0.15s;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 65px;
+      height: 4px;
+      background: #48485a;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3aa0f3;
+      cursor: pointer;
+    }
+
+    .swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      transition: transform 0.12s;
+    }
+    .swatch:hover, .swatch.selected { transform: scale(1.2); border-color: #fff; }
+
+    input[type="color"] {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    #textInput {
+      position: absolute;
+      display: none;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px dashed #3aa0f3;
+      border-radius: 4px;
+      color: #ff2e2e;
+      font: bold 20px 'Segoe UI', sans-serif;
+      padding: 3px 6px;
+      outline: none;
+      z-index: 30;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <input type="text" id="textInput" placeholder="Digite o texto..." />
+
+  <div id="drawToolbar" class="toolbar">
+    <button class="icon-btn active" data-tool="pen" title="Caneta">
+      <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+    </button>
+    <button class="icon-btn" data-tool="brush" title="Pincel Macio">
+      <svg viewBox="0 0 24 24"><path d="M18.37 2.63L14 7l-1.59-1.59a2 2 0 00-2.82 0L8 7l9 9 1.59-1.59a2 2 0 000-2.82L17 10l4.37-4.37a2.12 2.12 0 10-3-3z"/><path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/></svg>
+    </button>
+    <button class="icon-btn" data-tool="highlighter" title="Marca-texto">
+      <svg viewBox="0 0 24 24"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 01-2.8 0l-5.2-5.2a2 2 0 010-2.8L14 4"/></svg>
+    </button>
+    <!-- Novo Botão Borracha -->
+    <button class="icon-btn" data-tool="eraser" title="Borracha (Apagar desenhos e textos)">
+      <svg viewBox="0 0 24 24"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"/><path d="M17 17L7 7"/></svg>
+    </button>
+    <button class="icon-btn" data-tool="line" title="Linha Reta">
+      <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+    </button>
+
+    <select id="arrowType" class="compact-select" title="Tipo de Seta">
+      <option value="arrow-simple">↗ Seta</option>
+      <option value="arrow-double">↔ Dupla</option>
+      <option value="arrow-dashed">⇡ Pontilhada</option>
+      <option value="arrow-curved">↪ Curva</option>
+    </select>
+
+    <select id="rectType" class="compact-select" title="Tipo de Retângulo">
+      <option value="rect-outline">▭ Borda</option>
+      <option value="rect-rounded">▢ Redondo</option>
+      <option value="rect-filled">▬ Cheio</option>
+    </select>
+
+    <button class="icon-btn" data-tool="text" title="Texto">
+      <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    </button>
+
+    <div class="divider"></div>
+
+    <div class="size-control" title="Espessura do traço / borracha (ou role o Scroll)">
+      <div class="size-preview-box">
+        <div id="sizeCircle"></div>
+      </div>
+      <input type="range" id="strokeSize" min="2" max="22" value="5" />
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="swatch selected" style="background:#ff2e2e" data-color="#ff2e2e"></div>
+    <div class="swatch" style="background:#00e676" data-color="#00e676"></div>
+    <div class="swatch" style="background:#ffeb3b" data-color="#ffeb3b"></div>
+    <div class="swatch" style="background:#2979ff" data-color="#2979ff"></div>
+    <div class="swatch" style="background:#ffffff" data-color="#ffffff"></div>
+    <input type="color" id="colorPicker" value="#ff2e2e" title="Escolher Cor" />
+
+    <div class="divider"></div>
+
+    <button class="icon-btn" id="undoBtn" title="Desfazer (Ctrl+Z)">
+      <svg viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+    </button>
+    <button class="icon-btn" id="copyBtn" title="Copiar (Ctrl+C)">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    </button>
+    <button class="icon-btn" id="saveBtn" title="Salvar (Ctrl+S)">
+      <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    </button>
+    <button class="icon-btn danger" id="closeBtn" title="Cancelar (Esc)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <script src="editor.js"></script>
+</body>
+</html>
