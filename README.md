@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="icone_64x64.png" alt="SnapBrush Logo" width="80" height="80" />
+  <img src="icon_256.png" alt="SnapBrush Logo" width="80" height="80" />
   <h1>SnapBrush</h1>
   <p><strong>Ferramenta Open Source de captura de tela e anotação rápida para Windows 10 e 11 (x64)</strong></p>
   <p>
@@ -14,6 +14,14 @@
 O **SnapBrush** é um utilitário leve de captura e edição de tela em tempo real que opera silenciosamente na bandeja do sistema (System Tray). Ele foi desenvolvido para oferecer uma alternativa moderna, gratuita e de código aberto a programas como o a Ferramenta de Captura do Windows, reunindo muito mais opções de desenho, setas, formas e camadas.
 
 > **Aviso Legal (Projeto Não Oficial):** O SnapBrush é um software independente, open-source e **não oficial**, sem nenhuma relação com a Microsoft Corporation ou instituições terceiras. Desenvolvido com foco em desempenho, ele se integra perfeitamente ao sistema operacional para entregar a agilidade e a naturalidade de um aplicativo nativo do Windows.
+
+## Interface em Ação
+
+Ao pressionar `PrintScreen`, a tela congela instantaneamente permitindo selecionar e ajustar a área exata do recorte, visualizar as dimensões em pixels (`Largura x Altura`) e utilizar a barra flutuante de anotações:
+
+<div align="center">
+  <img src="Captura01.png" alt="Demonstração do SnapBrush em uso no Windows" width="780" />
+</div>
 
 
 ## Principais Funcionalidades
@@ -47,7 +55,7 @@ Todos os atalhos globais podem ser habilitados, desabilitados ou alterados clica
 3. Execute o instalador, escolha o diretório de sua preferência e conclua a instalação.
 4. O ícone da tesoura com pincel aparecerá na bandeja do sistema (próximo ao relógio do Windows). Pressione `PrintScreen` para começar a usar.
 
-## Como Executar e Compilar o Código-Fonte (Para Desenvolvedores)
+## Como Executar e Compilar o Código-Fonte
 
 ### Pré-requisitos
 * **Node.js** (versão 20 LTS ou superior)
@@ -57,7 +65,7 @@ Todos os atalhos globais podem ser habilitados, desabilitados ou alterados clica
 
 1. Clone o repositório e acesse a pasta do projeto:
    ```bash
-   git clone [https://github.com/KevinStoneTech/SnapBrush.git](https://github.com/KevinStoneTech/SnapBrush.git)
+   git clone https://github.com/KevinStoneTech/SnapBrush.git
    cd SnapBrush
    ```
 
