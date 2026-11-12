@@ -55,7 +55,7 @@ Todos os atalhos globais podem ser habilitados, desabilitados ou alterados clica
 3. Execute o instalador, escolha o diretório de sua preferência e conclua a instalação.
 4. O ícone da tesoura com pincel aparecerá na bandeja do sistema (próximo ao relógio do Windows). Pressione `PrintScreen` para começar a usar.
 
-## Como Executar e Compilar o Código-Fonte
+## Como Executar e Compilar o Código-Fonte (Para Desenvolvedores)
 
 ### Pré-requisitos
 * **Node.js** (versão 20 LTS ou superior)
