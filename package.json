@@ -1,8 +1,8 @@
 {
   "name": "snapbrush",
   "productName": "SnapBrush",
-  "version": "1.0.0",
-  "description": "Ferramenta open-source de captura e anotação de tela",
+  "version": "1.1.0",
+  "description": "Ferramenta open-source de captura e anotação de tela para Windows",
   "main": "main.js",
   "author": "Kevin Stone",
   "license": "MIT",

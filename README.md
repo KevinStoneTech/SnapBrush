@@ -1,17 +1,17 @@
 <div align="center">
   <img src="icon_256.png" alt="SnapBrush Logo" width="80" height="80" />
-  <h1>SnapBrush</h1>
+  <h1>SnapBrush for Windows</h1>
   <p><strong>Ferramenta Open Source de captura de tela e anotação rápida para Windows 10 e 11 (x64)</strong></p>
   <p>
     <img src="https://img.shields.io/badge/Plataforma-Windows%2010%20%7C%2011%20(x64)-0078D6" alt="Windows" />
     <img src="https://img.shields.io/badge/Licen%C3%A7a-MIT-green" alt="Licença MIT" />
-    <img src="https://img.shields.io/badge/Status-Est%C3%A1vel%20v1.0.0-brightgreen" alt="Versão" />
+    <img src="https://img.shields.io/badge/Status-Est%C3%A1vel%20v1.1.0-brightgreen" alt="Versão" />
   </p>
 </div>
 
 ## Sobre o Projeto
 
-O **SnapBrush** é um utilitário leve de captura e edição de tela em tempo real que opera silenciosamente na bandeja do sistema (System Tray). Ele foi desenvolvido para oferecer uma alternativa moderna, gratuita e de código aberto a programas como o a Ferramenta de Captura do Windows, reunindo muito mais opções de desenho, setas, formas e camadas.
+O **SnapBrush for Windows** é um utilitário leve de captura e edição de tela em tempo real que opera silenciosamente na bandeja do sistema (System Tray). Ele foi desenvolvido para oferecer uma alternativa moderna, gratuita e de código aberto a programas como o a Ferramenta de Captura do Windows, reunindo muito mais opções de desenho, setas, formas e camadas.
 
 > **Aviso Legal (Projeto Não Oficial):** O SnapBrush é um software independente, open-source e **não oficial**, sem nenhuma relação com a Microsoft Corporation ou instituições terceiras. Desenvolvido com foco em desempenho, ele se integra perfeitamente ao sistema operacional para entregar a agilidade e a naturalidade de um aplicativo nativo do Windows.
 
@@ -23,6 +23,12 @@ Ao pressionar `PrintScreen`, ou clicar sobre o icone do `SnapBrush`, que fica na
   <img src="Captura01.png" alt="Demonstração do SnapBrush em uso no Windows" width="780" />
 </div>
 
+## Novidades da Versão 1.1.0
+
+* **Ativação no 1º Clique com Submenus Ocultos:** Os botões de Setas e Formas foram redesenhados em ícones compactos que ativam a ferramenta no primeiro clique e abrem variações de formato ao clicar novamente ou com o botão direito.
+* **Novas Formas de Círculo:** Adicionadas as ferramentas **Borda Círculo** e **Círculo Cheio** junto às opções de retângulo.
+* **Textos Móveis a Qualquer Momento:** Qualquer texto inserido na área de captura pode ser clicado e arrastado livremente para outra posição a qualquer momento, mesmo após adicionar vários textos ou trocar de ferramenta.
+* **Instalador Otimizado:** Redução significativa no tamanho do instalador `.exe` com compressão máxima LZMA e remoção de pacotes redundantes.
 
 ## Principais Funcionalidades
 
@@ -51,7 +57,7 @@ Todos os atalhos globais podem ser habilitados, desabilitados ou alterados clica
 ## Como Instalar (Para Usuários)
 
 1. Acesse a aba [**Releases**](../../releases) deste repositório.
-2. Baixe o instalador **`SnapBrush Setup 1.0.0.exe`** na versão mais recente.
+2. Baixe o instalador **`SnapBrush Setup 1.1.0.exe`** na versão mais recente.
 3. Execute o instalador, escolha o diretório de sua preferência e conclua a instalação.
 4. O ícone da tesoura com pincel aparecerá na bandeja do sistema (próximo ao relógio do Windows). Pressione `PrintScreen` para começar a usar.
 
