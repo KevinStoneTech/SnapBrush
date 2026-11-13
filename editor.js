@@ -3,7 +3,7 @@ const { ipcRenderer } = require('electron');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-// Camada independente exclusiva para anotações (permite que a Borracha apague sem afetar o fundo)
+// Camada independente exclusiva para anotações
 const drawCanvas = document.createElement('canvas');
 const drawCtx = drawCanvas.getContext('2d');
 
@@ -11,8 +11,14 @@ const drawToolbar = document.getElementById('drawToolbar');
 const textInput = document.getElementById('textInput');
 const sizeSlider = document.getElementById('strokeSize');
 const sizeCircle = document.getElementById('sizeCircle');
-const arrowSelect = document.getElementById('arrowType');
-const rectSelect = document.getElementById('rectType');
+
+const arrowBtn = document.getElementById('arrowBtn');
+const arrowMenu = document.getElementById('arrowMenu');
+const arrowIconSlot = document.getElementById('arrowIconSlot');
+
+const rectBtn = document.getElementById('rectBtn');
+const rectMenu = document.getElementById('rectMenu');
+const rectIconSlot = document.getElementById('rectIconSlot');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -24,13 +30,21 @@ let selection = null;
 let isSelecting = false;
 let resizingHandle = null;
 let isDrawing = false;
+
 let currentTool = 'pen';
+let currentArrowVariant = 'arrow-simple';
+let currentRectVariant = 'rect-outline';
 let currentColor = '#ff2e2e';
 let currentSize = 5;
 
 let actions = [];
 let currentAction = null;
 let activeTextPos = null;
+
+// Controle para mover qualquer texto a qualquer momento
+let draggingTextAction = null;
+let hoveredTextAction = null;
+let textDragOffset = { x: 0, y: 0 };
 
 function updateSizeIndicator() {
   sizeSlider.value = currentSize;
@@ -41,6 +55,29 @@ function updateSizeIndicator() {
 }
 updateSizeIndicator();
 
+function closeAllSubmenus() {
+  arrowMenu.classList.remove('show');
+  rectMenu.classList.remove('show');
+}
+
+function adjustSubmenuDirection(menuEl) {
+  const rect = drawToolbar.getBoundingClientRect();
+  if (rect.top < 210) {
+    menuEl.classList.add('open-down');
+  } else {
+    menuEl.classList.remove('open-down');
+  }
+}
+
+function toggleSubmenu(menuEl) {
+  const isShowing = menuEl.classList.contains('show');
+  closeAllSubmenus();
+  if (!isShowing) {
+    adjustSubmenuDirection(menuEl);
+    menuEl.classList.add('show');
+  }
+}
+
 ipcRenderer.on('screen-captured', (event, dataUrl) => {
   selection = null;
   isSelecting = false;
@@ -49,6 +86,9 @@ ipcRenderer.on('screen-captured', (event, dataUrl) => {
   actions = [];
   currentAction = null;
   activeTextPos = null;
+  draggingTextAction = null;
+  hoveredTextAction = null;
+  closeAllSubmenus();
   drawToolbar.style.display = 'none';
   textInput.style.display = 'none';
 
@@ -58,14 +98,13 @@ ipcRenderer.on('screen-captured', (event, dataUrl) => {
 });
 
 function clearActiveStates() {
-  document.querySelectorAll('#drawToolbar .icon-btn[data-tool]').forEach(b => b.classList.remove('active'));
-  arrowSelect.classList.remove('active');
-  rectSelect.classList.remove('active');
+  document.querySelectorAll('#drawToolbar .icon-btn').forEach(b => b.classList.remove('active'));
 }
 
 document.querySelectorAll('#drawToolbar .icon-btn[data-tool]').forEach(btn => {
   btn.addEventListener('click', () => {
     commitTextBox();
+    closeAllSubmenus();
     clearActiveStates();
     btn.classList.add('active');
     currentTool = btn.dataset.tool;
@@ -73,34 +112,97 @@ document.querySelectorAll('#drawToolbar .icon-btn[data-tool]').forEach(btn => {
   });
 });
 
-arrowSelect.addEventListener('click', () => {
+// Botão Seta
+arrowBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
   commitTextBox();
+  const clickedCaret = e.target.dataset && e.target.dataset.caret === 'arrow';
+  const alreadyActive = currentTool.startsWith('arrow-');
+
   clearActiveStates();
-  arrowSelect.classList.add('active');
-  currentTool = arrowSelect.value;
-});
-arrowSelect.addEventListener('change', (e) => {
-  commitTextBox();
-  clearActiveStates();
-  arrowSelect.classList.add('active');
-  currentTool = e.target.value;
+  arrowBtn.classList.add('active');
+  currentTool = currentArrowVariant;
+  updateSizeIndicator();
+
+  if (clickedCaret || alreadyActive) {
+    toggleSubmenu(arrowMenu);
+  } else {
+    closeAllSubmenus();
+  }
 });
 
-rectSelect.addEventListener('click', () => {
+arrowBtn.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   commitTextBox();
   clearActiveStates();
-  rectSelect.classList.add('active');
-  currentTool = rectSelect.value;
+  arrowBtn.classList.add('active');
+  currentTool = currentArrowVariant;
+  updateSizeIndicator();
+  toggleSubmenu(arrowMenu);
 });
-rectSelect.addEventListener('change', (e) => {
+
+arrowMenu.querySelectorAll('.submenu-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.stopPropagation();
+    arrowMenu.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('selected'));
+    item.classList.add('selected');
+    currentArrowVariant = item.dataset.variant;
+    currentTool = currentArrowVariant;
+    arrowIconSlot.innerHTML = item.querySelector('svg').outerHTML;
+    clearActiveStates();
+    arrowBtn.classList.add('active');
+    closeAllSubmenus();
+  });
+});
+
+// Botão Formas (Retângulos e Círculos)
+rectBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  commitTextBox();
+  const clickedCaret = e.target.dataset && e.target.dataset.caret === 'rect';
+  const alreadyActive = currentTool.startsWith('rect-') || currentTool.startsWith('circle-');
+
+  clearActiveStates();
+  rectBtn.classList.add('active');
+  currentTool = currentRectVariant;
+  updateSizeIndicator();
+
+  if (clickedCaret || alreadyActive) {
+    toggleSubmenu(rectMenu);
+  } else {
+    closeAllSubmenus();
+  }
+});
+
+rectBtn.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
   commitTextBox();
   clearActiveStates();
-  rectSelect.classList.add('active');
-  currentTool = e.target.value;
+  rectBtn.classList.add('active');
+  currentTool = currentRectVariant;
+  updateSizeIndicator();
+  toggleSubmenu(rectMenu);
+});
+
+rectMenu.querySelectorAll('.submenu-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.stopPropagation();
+    rectMenu.querySelectorAll('.submenu-item').forEach(i => i.classList.remove('selected'));
+    item.classList.add('selected');
+    currentRectVariant = item.dataset.variant;
+    currentTool = currentRectVariant;
+    rectIconSlot.innerHTML = item.querySelector('svg').outerHTML;
+    clearActiveStates();
+    rectBtn.classList.add('active');
+    closeAllSubmenus();
+  });
 });
 
 document.querySelectorAll('.swatch').forEach(s => {
   s.addEventListener('click', () => {
+    closeAllSubmenus();
     document.querySelectorAll('.swatch').forEach(el => el.classList.remove('selected'));
     s.classList.add('selected');
     currentColor = s.dataset.color;
@@ -111,6 +213,7 @@ document.querySelectorAll('.swatch').forEach(s => {
 });
 
 document.getElementById('colorPicker').addEventListener('input', (e) => {
+  closeAllSubmenus();
   document.querySelectorAll('.swatch').forEach(el => el.classList.remove('selected'));
   currentColor = e.target.value;
   textInput.style.color = currentColor;
@@ -128,7 +231,6 @@ window.addEventListener('wheel', (e) => {
   updateSizeIndicator();
 });
 
-// Alças de redimensionamento da seleção (8 pontos estilo Lightshot)
 function getResizeHandles(sel) {
   const { x, y, w, h } = sel;
   const mx = x + w / 2;
@@ -156,7 +258,31 @@ function findHandleAt(mx, my) {
   return null;
 }
 
-// Confirma e insere o texto tanto no Enter quanto ao clicar fora
+// Calcula a caixa de seleção de qualquer texto já inserido para permitir arrastá-lo
+function getTextBounds(act) {
+  ctx.save();
+  ctx.font = `bold ${act.size}px 'Segoe UI', sans-serif`;
+  const width = ctx.measureText(act.text).width;
+  ctx.restore();
+  const height = act.size;
+  const x = act.points[0].x;
+  const y = act.points[0].y - height * 0.85;
+  return { x: x - 5, y: y - 3, w: width + 10, h: height + 8 };
+}
+
+function findTextActionAt(mx, my) {
+  for (let i = actions.length - 1; i >= 0; i--) {
+    const act = actions[i];
+    if (act.tool === 'text') {
+      const b = getTextBounds(act);
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) {
+        return act;
+      }
+    }
+  }
+  return null;
+}
+
 function commitTextBox() {
   if (textInput.style.display !== 'block' || !activeTextPos) return;
   const val = textInput.value.trim();
@@ -182,7 +308,8 @@ textInput.addEventListener('blur', () => {
 });
 
 canvas.addEventListener('mousedown', (e) => {
-  // Se o campo de texto estiver aberto e o usuário clicar fora, insere o texto imediatamente
+  closeAllSubmenus();
+
   if (textInput.style.display === 'block') {
     commitTextBox();
     return;
@@ -194,12 +321,25 @@ canvas.addEventListener('mousedown', (e) => {
     return;
   }
 
-  // Verifica se clicou em uma das 8 alças para redimensionar a área selecionada
   const handle = findHandleAt(e.clientX, e.clientY);
   if (handle) {
     resizingHandle = handle.id;
     drawToolbar.style.display = 'none';
     return;
+  }
+
+  // Se clicar sobre qualquer texto já adicionado (e não estiver usando a borracha), inicia o movimento dele
+  if (currentTool !== 'eraser') {
+    const clickedText = findTextActionAt(e.clientX, e.clientY);
+    if (clickedText) {
+      draggingTextAction = clickedText;
+      hoveredTextAction = clickedText;
+      textDragOffset.x = e.clientX - clickedText.points[0].x;
+      textDragOffset.y = e.clientY - clickedText.points[0].y;
+      canvas.style.cursor = 'move';
+      render();
+      return;
+    }
   }
 
   if (currentTool === 'text') {
@@ -243,6 +383,14 @@ canvas.addEventListener('mousemove', (e) => {
     return;
   }
 
+  // Move o texto selecionado em tempo real
+  if (draggingTextAction) {
+    draggingTextAction.points[0].x = e.clientX - textDragOffset.x;
+    draggingTextAction.points[0].y = e.clientY - textDragOffset.y;
+    render();
+    return;
+  }
+
   if (isDrawing && currentAction) {
     if (['pen', 'brush', 'highlighter', 'eraser'].includes(currentTool)) {
       currentAction.points.push({ x: e.clientX, y: e.clientY });
@@ -253,10 +401,33 @@ canvas.addEventListener('mousemove', (e) => {
     return;
   }
 
-  // Atualiza o cursor ao passar sobre as 8 alças da seleção
   if (selection) {
     const h = findHandleAt(e.clientX, e.clientY);
-    canvas.style.cursor = h ? h.cursor : 'crosshair';
+    if (h) {
+      if (hoveredTextAction) {
+        hoveredTextAction = null;
+        render();
+      }
+      canvas.style.cursor = h.cursor;
+      return;
+    }
+
+    if (currentTool !== 'eraser') {
+      const txtOver = findTextActionAt(e.clientX, e.clientY);
+      if (txtOver !== hoveredTextAction) {
+        hoveredTextAction = txtOver;
+        render();
+      }
+      if (txtOver) {
+        canvas.style.cursor = 'move';
+        return;
+      }
+    } else if (hoveredTextAction) {
+      hoveredTextAction = null;
+      render();
+    }
+
+    canvas.style.cursor = 'crosshair';
   }
 });
 
@@ -275,6 +446,9 @@ canvas.addEventListener('mouseup', () => {
     resizingHandle = null;
     normalizeSelection();
     showToolbar();
+    render();
+  } else if (draggingTextAction) {
+    draggingTextAction = null;
     render();
   } else if (isDrawing && currentAction) {
     isDrawing = false;
@@ -295,7 +469,7 @@ function normalizeSelection() {
 function showToolbar() {
   if (!selection) return;
   drawToolbar.style.display = 'flex';
-  const barWidth = drawToolbar.offsetWidth || 610;
+  const barWidth = drawToolbar.offsetWidth || 520;
   const leftPos = Math.min(
     window.innerWidth - barWidth - 10,
     Math.max(10, selection.x + selection.w - barWidth)
@@ -389,6 +563,20 @@ function drawItem(targetCtx, act) {
       targetCtx.globalAlpha = 0.35;
       targetCtx.fillRect(rx, ry, rw, rh);
     }
+  } else if (act.tool.startsWith('circle')) {
+    const cx = (p1.x + p2.x) / 2;
+    const cy = (p1.y + p2.y) / 2;
+    const radiusX = Math.abs(p2.x - p1.x) / 2;
+    const radiusY = Math.abs(p2.y - p1.y) / 2;
+
+    targetCtx.beginPath();
+    targetCtx.ellipse(cx, cy, radiusX, radiusY, 0, 0, Math.PI * 2);
+    if (act.tool === 'circle-outline') {
+      targetCtx.stroke();
+    } else if (act.tool === 'circle-filled') {
+      targetCtx.globalAlpha = 0.35;
+      targetCtx.fill();
+    }
   } else if (act.tool === 'text') {
     targetCtx.font = `bold ${act.size}px 'Segoe UI', sans-serif`;
     targetCtx.fillText(act.text, p1.x, p1.y);
@@ -458,7 +646,6 @@ function render(exportMode = false) {
   }
 
   if (selection) {
-    // Renderiza todas as anotações e borracha na camada transparente separada
     drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     actions.forEach(act => drawItem(drawCtx, act));
     if (currentAction && (currentAction.points.length > 1 || currentAction.tool === 'eraser')) {
@@ -477,10 +664,22 @@ function render(exportMode = false) {
 
     ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
     ctx.drawImage(drawCanvas, 0, 0);
+
+    // Destaca o texto quando o mouse passa por cima ou enquanto está sendo movido
+    const targetText = draggingTextAction || hoveredTextAction;
+    if (!exportMode && targetText && actions.includes(targetText)) {
+      const b = getTextBounds(targetText);
+      ctx.save();
+      ctx.strokeStyle = '#3aa0f3';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(b.x, b.y, b.w, b.h);
+      ctx.restore();
+    }
+
     ctx.restore();
 
     if (!exportMode) {
-      // Borda tracejada estilo Lightshot
       ctx.save();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1;
@@ -488,7 +687,6 @@ function render(exportMode = false) {
       ctx.strokeRect(rx, ry, rw, rh);
       ctx.restore();
 
-      // 8 quadradinhos de redimensionamento
       const handles = getResizeHandles({ x: rx, y: ry, w: rw, h: rh });
       ctx.fillStyle = '#ffffff';
       ctx.strokeStyle = '#000000';
@@ -498,7 +696,6 @@ function render(exportMode = false) {
         ctx.strokeRect(h.x - 3.5, h.y - 3.5, 7, 7);
       });
 
-      // Indicador de tamanho (ex: 449x350) no canto superior esquerdo
       const dimLabel = `${Math.round(rw)}x${Math.round(rh)}`;
       ctx.font = 'bold 12px Segoe UI, sans-serif';
       const textWidth = ctx.measureText(dimLabel).width;
@@ -541,7 +738,14 @@ async function copySelection() {
   ipcRenderer.send('copy-image', dataUrl);
 }
 
-document.getElementById('undoBtn').onclick = () => { commitTextBox(); actions.pop(); render(); };
+document.getElementById('undoBtn').onclick = () => {
+  closeAllSubmenus();
+  commitTextBox();
+  hoveredTextAction = null;
+  draggingTextAction = null;
+  actions.pop();
+  render();
+};
 document.getElementById('closeBtn').onclick = () => ipcRenderer.send('close-overlay');
 document.getElementById('copyBtn').onclick = () => copySelection();
 document.getElementById('saveBtn').onclick = () => {
@@ -551,7 +755,12 @@ document.getElementById('saveBtn').onclick = () => {
 window.addEventListener('keydown', (e) => {
   if (textInput.style.display === 'block') return;
   if (e.key === 'Escape') ipcRenderer.send('close-overlay');
-  if (e.ctrlKey && e.key.toLowerCase() === 'z') { actions.pop(); render(); }
+  if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+    hoveredTextAction = null;
+    draggingTextAction = null;
+    actions.pop();
+    render();
+  }
   if (e.ctrlKey && e.key.toLowerCase() === 'c' && selection) copySelection();
   if (e.ctrlKey && e.key.toLowerCase() === 's' && selection) {
     ipcRenderer.send('save-image', getCroppedCanvas().toDataURL('image/png'));

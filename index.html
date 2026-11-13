@@ -22,7 +22,14 @@
       backdrop-filter: blur(8px);
     }
 
+    .tool-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
     .icon-btn {
+      position: relative;
       width: 30px;
       height: 30px;
       display: flex;
@@ -41,19 +48,72 @@
     .icon-btn.active { background: #0078d4; color: #fff; border-color: #3aa0f3; }
     .icon-btn.danger:hover { background: #e81123; color: #fff; }
 
-    select.compact-select {
-      background: #262630;
-      color: #e0e0e8;
-      border: 1px solid #3e3e4c;
-      border-radius: 6px;
-      height: 30px;
-      padding: 0 4px;
+    .corner-caret {
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-top: 4px solid transparent;
+      border-right: 4px solid currentColor;
+      border-bottom: 4px solid currentColor;
+      opacity: 0.65;
+    }
+    .icon-btn:hover .corner-caret,
+    .icon-btn.active .corner-caret {
+      opacity: 1;
+    }
+
+    .submenu {
+      position: absolute;
+      left: 0;
+      bottom: 36px;
+      display: none;
+      flex-direction: column;
+      background: rgba(24, 24, 30, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 7px;
+      padding: 4px;
+      gap: 2px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+      z-index: 40;
+      min-width: 145px;
+    }
+    .submenu.open-down {
+      bottom: auto;
+      top: 36px;
+    }
+    .submenu.show {
+      display: flex;
+    }
+
+    .submenu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      background: transparent;
+      color: #dcdce6;
+      border: none;
+      border-radius: 5px;
       font-size: 12px;
       cursor: pointer;
-      outline: none;
+      text-align: left;
+      white-space: nowrap;
     }
-    select.compact-select:hover { border-color: #606075; }
-    select.compact-select.active { border-color: #3aa0f3; background: #163654; color: #fff; }
+    .submenu-item svg {
+      width: 15px;
+      height: 15px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    .submenu-item:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+    .submenu-item.selected { background: #0078d4; color: #fff; }
 
     .divider {
       width: 1px;
@@ -153,7 +213,6 @@
     <button class="icon-btn" data-tool="highlighter" title="Marca-texto">
       <svg viewBox="0 0 24 24"><path d="M9 11l-6 6v3h9l3-3"/><path d="M22 12l-4.6 4.6a2 2 0 01-2.8 0l-5.2-5.2a2 2 0 010-2.8L14 4"/></svg>
     </button>
-    <!-- Novo Botão Borracha -->
     <button class="icon-btn" data-tool="eraser" title="Borracha (Apagar desenhos e textos)">
       <svg viewBox="0 0 24 24"><path d="M20 20H7L3 16C2 15 2 13 3 12L13 2L22 11L20 20Z"/><path d="M17 17L7 7"/></svg>
     </button>
@@ -161,20 +220,67 @@
       <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/></svg>
     </button>
 
-    <select id="arrowType" class="compact-select" title="Tipo de Seta">
-      <option value="arrow-simple">↗ Seta</option>
-      <option value="arrow-double">↔ Dupla</option>
-      <option value="arrow-dashed">⇡ Pontilhada</option>
-      <option value="arrow-curved">↪ Curva</option>
-    </select>
+    <!-- Botão de Seta -->
+    <div class="tool-group">
+      <button class="icon-btn" id="arrowBtn" title="Seta (Clique novamente ou botão direito para trocar formato)">
+        <span id="arrowIconSlot">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="10 5 19 5 19 14"/></svg>
+        </span>
+        <span class="corner-caret" data-caret="arrow"></span>
+      </button>
+      <div class="submenu" id="arrowMenu">
+        <button class="submenu-item selected" data-variant="arrow-simple">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="10 5 19 5 19 14"/></svg>
+          Seta Simples
+        </button>
+        <button class="submenu-item" data-variant="arrow-double">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/><polyline points="12 19 5 19 5 12"/></svg>
+          Seta Dupla
+        </button>
+        <button class="submenu-item" data-variant="arrow-dashed">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5" stroke-dasharray="3 3"/><polyline points="10 5 19 5 19 14"/></svg>
+          Seta Pontilhada
+        </button>
+        <button class="submenu-item" data-variant="arrow-curved">
+          <svg viewBox="0 0 24 24"><path d="M5 19 Q 6 6 19 5"/><polyline points="12 4 19 5 17 12"/></svg>
+          Seta Curva
+        </button>
+      </div>
+    </div>
 
-    <select id="rectType" class="compact-select" title="Tipo de Retângulo">
-      <option value="rect-outline">▭ Borda</option>
-      <option value="rect-rounded">▢ Redondo</option>
-      <option value="rect-filled">▬ Cheio</option>
-    </select>
+    <!-- Botão de Formas (Retângulos e Círculos) -->
+    <div class="tool-group">
+      <button class="icon-btn" id="rectBtn" title="Formas (Clique novamente ou botão direito para trocar formato)">
+        <span id="rectIconSlot">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/></svg>
+        </span>
+        <span class="corner-caret" data-caret="rect"></span>
+      </button>
+      <div class="submenu" id="rectMenu">
+        <button class="submenu-item selected" data-variant="rect-outline">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/></svg>
+          Borda Retangular
+        </button>
+        <button class="submenu-item" data-variant="rect-rounded">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="5"/></svg>
+          Borda Arredondada
+        </button>
+        <button class="submenu-item" data-variant="rect-filled">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="currentColor" fill-opacity="0.45"/></svg>
+          Retângulo Cheio
+        </button>
+        <button class="submenu-item" data-variant="circle-outline">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+          Borda Círculo
+        </button>
+        <button class="submenu-item" data-variant="circle-filled">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="0.45"/></svg>
+          Círculo Cheio
+        </button>
+      </div>
+    </div>
 
-    <button class="icon-btn" data-tool="text" title="Texto">
+    <button class="icon-btn" data-tool="text" title="Texto (Arraste textos existentes para mover)">
       <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
     </button>
 
